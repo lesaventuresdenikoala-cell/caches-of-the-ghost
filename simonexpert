@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Simon Immersif</title>
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    background: #111;
+    color: white;
+  }
+
+  #game {
+    display: grid;
+    grid-template-columns: 150px 150px;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+  }
+
+  .btn {
+    width: 150px;
+    height: 150px;
+    border-radius: 15px;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+
+  .btn.active {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .green { background: #2ecc71; }
+  .red { background: #e74c3c; }
+  .yellow { background: #f1c40f; }
+  .blue { background: #3498db; }
+
+  #timer { margin-top: 15px; font-size: 20px; color: #ffcc00; }
+  #message { margin-top: 20px; font-size: 22px; }
+  #coords { margin-top: 20px; font-size: 22px; color: #00ffcc; display:none; }
+</style>
+</head>
+<body>
+
+<h1>🎮 Simon Game</h1>
+
+<div id="game">
+  <div class="btn green" data-color="green"></div>
+  <div class="btn red" data-color="red"></div>
+  <div class="btn yellow" data-color="yellow"></div>
+  <div class="btn blue" data-color="blue"></div>
+</div>
+
+<button onclick="start()">Démarrer</button>
+
+<div id="timer"></div>
+<div id="message"></div>
+<div id="coords">📍 N00°00.000 E00°00.000</div>
+
+<script>
+const colors = ["green","red","yellow","blue"];
+let sequence = [];
+let player = [];
+let level = 0;
+let started = false;
+let speed = 700;
+
+let timerInterval;
+let timeLeft = 5;
+
+const timerDisplay = document.getElementById("timer");
+const message = document.getElementById("message");
+const coords = document.getElementById("coords");
+
+function start(){
+  sequence = [];
+  player = [];
+  level = 0;
+  speed = 700;
+  started = true;
+
+  message.textContent = "";
+  coords.style.display = "none";
+
+  next();
+}
+
+function next(){
+  player = [];
+  level++;
+  document.querySelector("h1").textContent = "Niveau " + level;
+
+  speed = Math.max(180, speed - 20);
+
+  sequence.push(colors[Math.floor(Math.random()*4)]);
+  play();
+}
+
+function play(){
+  let i = 0;
+  clearTimer();
+
+  let interval = setInterval(()=>{
+    flash(sequence[i]);
+    playSound(sequence[i]);
+    i++;
+    if(i >= sequence.length){
+      clearInterval(interval);
+      startTimer();
+    }
+  }, speed);
+}
+
+function flash(color){
+  const el = document.querySelector("." + color);
+  el.classList.add("active");
+  setTimeout(()=>el.classList.remove("active"), 200);
+}
+
+document.querySelectorAll(".btn").forEach(b=>{
+  b.onclick = ()=>{
+    if(!started) return;
+
+    const c = b.dataset.color;
+    player.push(c);
+
+    flash(c);
+    playSound(c);
+
+    resetTimer();
+    check(player.length-1);
+  };
+});
+
+function check(i){
+  if(player[i] !== sequence[i]){
+    lose("❌ Mauvaise couleur");
+    return;
+  }
+
+  if(player.length === sequence.length){
+    clearTimer();
+
+    if(level === 20){
+      win();
+    } else {
+      setTimeout(next, 800);
+    }
+  }
+}
+
+// ⏱️ TIMER
+function startTimer(){
+  timeLeft = 5;
+  timerDisplay.textContent = "⏳ " + timeLeft + " s";
+
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+
+    timerDisplay.textContent = "⏳ " + timeLeft + " s";
+
+    // bip de stress
+    playTick(timeLeft);
+
+    if(timeLeft <= 0){
+      playAlarm();
+      lose("⏱️ Trop lent");
+    }
+  },1000);
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  startTimer();
+}
+
+function clearTimer(){
+  clearInterval(timerInterval);
+  timerDisplay.textContent = "";
+}
+
+// ❌ PERDU
+function lose(reason){
+  clearTimer();
+  playErrorSound();
+  message.textContent = "😵 " + reason + " (niveau " + level + ")";
+  started = false;
+}
+
+// 🎉 GAGNÉ
+function win(){
+  clearTimer();
+  playWinSound();
+  message.textContent = "🎉 Bravo ! Tu as réussi les 20 séquences !";
+  coords.style.display = "block";
+  started = false;
+}
+
+// 🔊 sons boutons
+function playSound(color){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const freq = {
+    green: 392,
+    red: 330,
+    yellow: 262,
+    blue: 523
+  };
+
+  beep(ctx, freq[color], 0.2, "sine");
+}
+
+// 🔊 bip timer (plus stressant à la fin)
+function playTick(t){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const freq = t <= 2 ? 800 : 500;
+  beep(ctx, freq, 0.05, "square");
+}
+
+// 🚨 alarme
+function playAlarm(){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  beep(ctx, 150, 1, "sawtooth");
+}
+
+// ❌ erreur
+function playErrorSound(){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.value = 120;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.4);
+  osc.stop(ctx.currentTime + 0.4);
+}
+
+// 🎉 victoire
+function playWinSound(){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const notes = [523, 659, 784, 1046]; // do-mi-sol-do
+  let t = ctx.currentTime;
+
+  notes.forEach((f, i)=>{
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.frequency.value = f;
+    osc.type = "sine";
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t + i*0.2);
+    osc.stop(t + i*0.2 + 0.2);
+  });
+}
+
+// utilitaire
+function beep(ctx, freq, duration, type){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.frequency.value = freq;
+  osc.type = type;
+
+  gain.gain.value = 0.2;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + duration);
+}
+</script>
+
+</body>
+</html>
