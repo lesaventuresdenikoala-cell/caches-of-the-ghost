@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Diplôme de victoire</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top, #1a1a1a, #000);
+    font-family: 'Georgia', serif;
+  }
+
+  .diplome {
+    width: 600px;
+    padding: 50px;
+    background: linear-gradient(145deg, #fff8dc, #f5e6b3);
+    border: 12px solid #c9a24a;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    text-align: center;
+    position: relative;
+  }
+
+  .diplome:before,
+  .diplome:after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 4px solid #c9a24a;
+    border-radius: 50%;
+    top: -25px;
+  }
+
+  .diplome:before {
+    left: -25px;
+  }
+
+  .diplome:after {
+    right: -25px;
+  }
+
+  h1 {
+    font-size: 32px;
+    color: #7a4f00;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .message {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 30px;
+    line-height: 1.5;
+  }
+
+  .code {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    background: #7a4f00;
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 10px;
+    letter-spacing: 3px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  .signature {
+    margin-top: 40px;
+    font-style: italic;
+    color: #555;
+  }
+
+  .sparkle {
+    font-size: 18px;
+    margin-top: 10px;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div class="diplome">
+  <h1>🎉 Bravo ! 🎉</h1>
+
+  <div class="message">
+    Vous avez réussi à vaincre ce jeu Simon !<br>
+    Votre mémoire et votre concentration sont exemplaires.
+  </div>
+
+  <div class="message">
+    Voici le code pour certitude :
+  </div>
+
+  <div class="code">SIMON</div>
+
+  <div class="signature">
+    Diplôme officiel de réussite 🏆
+  </div>
+
+  <div class="sparkle">✨ Félicitations ✨</div>
+</div>
+
+</body>
+</html>
